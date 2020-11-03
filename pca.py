@@ -16,8 +16,8 @@ class pca:
         N, H, W = images.shape
         images = np.reshape(images, (-1, H * W))
         numerator = images - images.mean(axis=0).reshape(1, -1)
-        images_standardized = numerator/ ((images.std(axis=0)+eps).reshape(1, -1) )
-        return images_standardized
+        images_std = numerator/ ((images.std(axis=0)+eps).reshape(1, -1) )
+        return images_std.T
     
     def plot_eigenspectrum(self):
         x = list(range(len(self.eigenValues)))
@@ -33,9 +33,8 @@ class pca:
         plt.ylim([0, max(self.eigenValues)])
         plt.xlabel ('i')
         plt.ylabel (r"$\lambda_{i}$")
-        plt.title("Eigenvalue spectrum")
+        plt.title("Scree plot")
         plt.show()
-
     
     def sort_by_eigenv(self, eigenVal, eigenVect):
         idx = eigenVal.argsort()[::-1]   
@@ -43,18 +42,20 @@ class pca:
         eigenVect = eigenVect[:,idx]
         return eigenVal, eigenVect
     
-    def compute_covariance_matrix(self, standardized_images):
-        N = len(standardized_images)
-        return np.dot(standardized_images.T, standardized_images)/N
+    def compute_cov_matrix(self, data):
+        #data must be centered
+        N = data.shape[1]
+        return np.dot(data, data.T)/(N-1)
         
-    def spectral_decomposition(self, cov_matrix):
+    def spectral_decomp(self, cov_matrix):
         eigenValues, eigenVectors = linalg.eig(cov_matrix)
         return self.sort_by_eigenv(eigenValues, eigenVectors)
     
-    def fit_pca(self, standardized_images):
-        self.cov_matrix = self.compute_covariance_matrix(standardized_images)
-        self.eigenValues, self.eigenVectors = self.spectral_decomposition(self.cov_matrix)
+    def fit_pca(self, data):
+        self.cov_matrix = self.compute_cov_matrix(data)
+        self.eigenValues, self.eigenVectors = self.spectral_decomp(self.cov_matrix)
         self.new_coordinates = np.dot(self.eigenVectors[:,0: self.M].T,
-                                      standardized_images.T)       
-        
+                                      data)
+        self.reconstruction = np.dot(self.eigenVectors[:,0: self.M], self.new_coordinates)
+     
         
