@@ -19,22 +19,46 @@ class pca:
         images_std = numerator/ ((images.std(axis=0)+eps).reshape(1, -1) )
         return images_std.T
     
-    def plot_eigenspectrum(self):
+    def scree_plot_and_var_plot(self):
+        fig = plt.figure(figsize=(15, 4))
+        ax1 = plt.subplot(1, 2, 1)
         x = list(range(len(self.eigenValues)))
         y = self.eigenValues
-        plt.plot(x, y,c="blue")
+        ax1.plot(x, y,c="blue")
         f = mticker.ScalarFormatter(useOffset=False,
                                     useMathText=True)
         g = lambda x, pos : "${}$".format(
             f._formatSciNotation('%1.10e' % x))
         plt.gca().yaxis.set_major_formatter(
             mticker.FuncFormatter(g))
-        plt.xlim([0,len(self.eigenValues)])
-        plt.ylim([0, max(self.eigenValues)])
+        ax1.set_xlim([0,len(self.eigenValues)])
+        ax1.set_ylim([0, max(self.eigenValues)])
         plt.xlabel ('i')
         plt.ylabel (r"$\lambda_{i}$")
-        plt.title("Scree plot")
+        ax1.set_title("Scree plot")
+        
+        n_components = len(self.eigenValues)
+        variance = sum(self.eigenValues)
+        ax2 = plt.subplot(1, 2, 2)
+        ax2.plot([sum(self.eigenValues[0:i])/variance 
+                  for i in range(n_components)],c="blue")
+        ax2.set_xlim(0,n_components)
+        ax2.set_ylim(0,1)
+        plt.xlabel("Component")
+        plt.ylabel("Variance Explained")
         plt.show()
+        
+    def explained_variance_plot(self):
+        n_components = len(self.eigenValues)
+        variance = sum(self.eigenValues)
+        plt.plot([sum(self.eigenValues[0:i])/variance 
+                  for i in range(n_components)],c="blue")
+        plt.xlim(0,n_components)
+        plt.ylim(0,1)
+        plt.xlabel("Component")
+        plt.ylabel("Variance Explained")
+        plt.show()
+        
     
     def sort_by_eigenv(self, eigenVal, eigenVect):
         idx = eigenVal.argsort()[::-1]   
@@ -56,6 +80,7 @@ class pca:
         self.eigenValues, self.eigenVectors = self.spectral_decomp(self.cov_matrix)
         self.new_coordinates = np.dot(self.eigenVectors[:,0: self.M].T,
                                       data)
-        self.reconstruction = np.dot(self.eigenVectors[:,0: self.M], self.new_coordinates)
+        self.reconstruction = np.dot(self.eigenVectors[:,0: self.M],
+                                     self.new_coordinates)
      
         
