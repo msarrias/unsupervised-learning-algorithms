@@ -1,5 +1,5 @@
 
-Implementing some dimensionality reduction and clustering methods and reproduce results from different papers.
+Implementing some dimensionality reduction and clustering methods and reproducing results from different papers.
 
 * Spectral Clustering [article](https://arxiv.org/abs/0711.0189)
 * Laplacian eigenmaps for Dimensionality Reduction and Data Representation [article](https://ieeexplore.ieee.org/document/6789755)
