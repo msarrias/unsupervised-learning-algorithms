@@ -6,7 +6,8 @@ import networkx as nx
 import scipy.linalg as la
 
 class LE:   
-    def __init__(self, par, nn_graph, m, coord, sim_measure = 'inv_ed' , print_ = False):
+    def __init__(self, par, nn_graph, m, coord, sim_measure = 'inv_ed' , verbose = False):
+        self.verbose = False
         self.sim_measure = sim_measure
         if self.sim_measure == 'inv_ed':
             self.k = par
@@ -16,30 +17,6 @@ class LE:
         self.m = m
         self.coord = coord
         self.N = len(coord)
-        self.G = self.init_graph_nodes()
-        if print_: print(f'- Initialized {nn_graph} graph.')
-        self.add_nodes_position()
-        if print_: print('- Added nodes.')
-        self.eucledian_distance_matrix()
-        if print_: print('- Computed the Eucledian Distance similarity matrix.')
-        if nn_graph == 'knn':
-            self.connect_nodes_knn()
-        if nn_graph == 'mutual_knn':
-            self.connect_nodes_mutual_nn()
-        if print_: print(f'- Added edges and weights to each node {self.k} {nn_graph}')
-        if print_: print(f'and weights given by the heat kernel with t = {self.t}')
-        if print_: print(f'- Single component Graph: {nx.is_connected(self.G)}')
-        self.A = self.adjacency_matrix()
-        self.Vol = np.sum(self.A)
-        self.sqrtVol = np.sqrt(self.Vol)
-        self.D = self.diagonal_matrix()
-        self.L_unnorm = self.D - self.A
-        self.L_symm = np.matmul(np.matmul(np.diag(sum(self.D)**(-1/2)), self.L_unnorm), 
-                                np.diag(sum(self.D)**(-1/2)))
-        if print_: print(f'- Computed the unnormalized Laplacian')
-        self.solve_eigenvalue_problem()
-        if print_: print(f'- Solved the generalized eigenvalue problem')
-        self.commute_time_embedding()
 
     def init_graph_nodes(self):
         G = nx.Graph()
@@ -88,7 +65,6 @@ class LE:
                     self.G.add_edge(i+1, link+1, 
                                     weight = 1/self.distance_matrix[i][link])
             
-
     def adjacency_matrix(self):
         return nx.adjacency_matrix(self.G).todense()
     
@@ -132,5 +108,30 @@ class LE:
         LHS_l = self.sqrtVol * sqrt_inv_Al[0:self.m, 0:self.m]
         self.CTEl = np.dot(LHS_l, self.Vl_T[0:self.m, :])
 
-
+    def fit_laplacian_eigenmaps(self):
+        self.G = self.init_graph_nodes()
+        if self.verbose: print(f'- Initialized {nn_graph} graph.')
+        self.add_nodes_position()
+        if self.verbose: print('- Added nodes.')
+        self.eucledian_distance_matrix()
+        if self.verbose: print('- Computed the Eucledian Distance similarity matrix.')
+        if nn_graph == 'knn':
+            self.connect_nodes_knn()
+        if nn_graph == 'mutual_knn':
+            self.connect_nodes_mutual_nn()
+        if self.verbose: print(f'- Added edges and weights to each node {self.k} {nn_graph}')
+        if self.verbose: print(f'and weights given by the heat kernel with t = {self.t}')
+        if self.verbose: print(f'- Single component Graph: {nx.is_connected(self.G)}')
+        self.A = self.adjacency_matrix()
+        self.Vol = np.sum(self.A)
+        self.sqrtVol = np.sqrt(self.Vol)
+        self.D = self.diagonal_matrix()
+        self.L_unnorm = self.D - self.A
+        self.L_symm = np.matmul(np.matmul(np.diag(sum(self.D)**(-1/2)), self.L_unnorm), 
+                                np.diag(sum(self.D)**(-1/2)))
+        self.L_rw = np.matmul(np.linalg.inv(self.D), self.L_unnorm)
+        if self.verbose: print(f'- Computed the unnormalized Laplacian')
+        self.solve_eigenvalue_problem()
+        if self.verbose: print(f'- Solved the generalized eigenvalue problem')
+        self.commute_time_embedding()
 

@@ -16,8 +16,22 @@ class pca:
         N, H, W = images.shape
         images = np.reshape(images, (-1, H * W))
         numerator = images - images.mean(axis=0).reshape(1, -1)
-        images_std = numerator/ ((images.std(axis=0)+eps).reshape(1, -1) )
+        dem = (images.std(axis=0) + eps).reshape(1, -1)
+        images_std = numerator/ dem
         return images_std.T
+    
+    @staticmethod
+    def center_images_channel_wise(images):
+        '''
+        Channel-wise normalization of the input images: 
+        subtracted by mean and divided by std along the pixels
+        '''
+        N, H, W = images.shape
+        images = np.reshape(images, (-1, H * W))
+        cent_images = images - images.mean(axis=0).reshape(1, -1)
+        
+        return cent_images.T
+    
     
     def scree_plot_and_var_plot(self):
         fig = plt.figure(figsize=(15, 4))
@@ -58,7 +72,22 @@ class pca:
         plt.xlabel("Component")
         plt.ylabel("Variance Explained")
         plt.show()
-        
+    
+    def scree_plot(self):
+        x = list(range(len(self.eigenValues)))
+        y = self.eigenValues
+        plt.plot(x, y,c="blue")
+        f = mticker.ScalarFormatter(useOffset=False,
+                                    useMathText=True)
+        g = lambda x, pos : "${}$".format(
+            f._formatSciNotation('%1.10e' % x))
+        plt.gca().yaxis.set_major_formatter(
+            mticker.FuncFormatter(g))
+        plt.xlim([0,len(self.eigenValues)])
+        plt.ylim([0, max(self.eigenValues)])
+        plt.xlabel ('i')
+        plt.ylabel (r"$\lambda_{i}$")
+        plt.title("Scree plot")
     
     def sort_by_eigenv(self, eigenVal, eigenVect):
         idx = eigenVal.argsort()[::-1]   
@@ -72,8 +101,8 @@ class pca:
         return np.dot(data, data.T)/(N-1)
         
     def spectral_decomp(self, cov_matrix):
-        eigenValues, eigenVectors = linalg.eig(cov_matrix)
-        return self.sort_by_eigenv(eigenValues, eigenVectors)
+        eigenValues, eigenVectors = linalg.eigh(cov_matrix)
+        return self.sort_by_eigenv(eigenValues.real, eigenVectors)
     
     def fit_pca(self, data):
         self.cov_matrix = self.compute_cov_matrix(data)
