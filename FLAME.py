@@ -6,10 +6,10 @@ from kmeans import *
 class FLAME:
     def __init__(self, data_coord, k, outlier_threshold, eps = 1e-10, verbose = False):
         
-        self.data_coord = data_coord # N x M
+        self.data_coord = data_coord # N x l
         self.N, _ = self.data_coord.shape
         self.k_max = int(np.sqrt(self.N) + 10)
-        print(self.k_max)
+        print(f'k max: {self.k_max}')
         self.outlier_threshold = outlier_threshold 
         self.eps = eps
         self.verbose = verbose
@@ -146,7 +146,7 @@ class FLAME:
         #Update of fuzzy membership
         local_neighb_approx_error = np.infty
         it = 0
-        if self.verbose: print('it:')
+        if self.verbose: print('iteration:')
         while local_neighb_approx_error > self.eps:
             local_neighb_approx_error = self.update_fuzzy_membership(it)
             if self.verbose: 
