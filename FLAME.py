@@ -108,7 +108,29 @@ class FLAME:
         self.clusters_pred[self.rest] = self.fuzzyship_matrix[self.rest].argsort()[:,-1]
         self.clusters_pred[self.outliers] = self.M - 1
         
+
+    def find_predicted_true_labels(self, true_labels):
+        clusters_args_pred_dic = {i: sorted([idx for idx in range(len(self.clusters_pred)) 
+                                     if self.clusters_pred[idx] == i]) for i in list(set(self.clusters_pred))}
+
+        clusters_args_true_dic = {i: sorted([idx for idx in range(len(true_labels)) 
+                                             if true_labels[idx] == i]) for i in list(set(true_labels))}
         
+        if len(list(set(true_labels))) == len(list(set(self.clusters_pred))):
+            num_clusters = len(list(set(true_labels)))
+            pred_true_find_clusters = np.zeros((num_clusters, num_clusters))
+        else:  raise Exception(r'different number of predicted classes and true classes')
+
+        classes_comp_idx = {i : {j: [xi for xi in clusters_args_pred_dic[i] 
+                                     if xi in clusters_args_true_dic[j]]
+                                 for j in range(num_clusters)} for i in range(num_clusters)}
+        
+        new_pred = np.asarray([0] * len(true_labels))
+        for pred_class, finding_true_class in classes_comp_idx.items():
+            idx_argmax = np.argmax([len(i) for i in list(finding_true_class.values())])
+            new_pred[classes_comp_idx[pred_class][idx_argmax]] = idx_argmax
+        return(new_pred)
+
     def fit_FLAME(self):
         #-----------------  FIRST PART: Extraction of the structure information -----------------#
         #pairwise distance measure
